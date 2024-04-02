@@ -1,10 +1,28 @@
+#'  Generates subdirectories relative to notebook to store intermediate data
+#'  and figures generated throughout the pipeline
+#' @param data.name A prepended the directory to write out the file to. Default is current working directory
+#' 
+Create.Pipeline.Directories <- function(data.name = "pipeline") {
+  
+  data.dir <- paste(data.name, "data", sep="_")
+  figure.dir <- paste(data.name, "figures", sep="_")
+  
+  if (!dir.exists(data.dir)) {
+    dir.create(data.dir)
+  }
+  
+  if (!dir.exists(figure.dir)) {
+    dir.create(figure.dir)
+  }
+}
+
 #'  writes out a file prepended with today's date (YYYYMMDD format) as a .csv
 #'  for the matching file name with the latest (most recent) matching name
 #' @param export.data the data table or frame to export
 #' @param filename Filename of the generated .csv
 #' @param base.dir (optional) the directory to write out the file to. Default is current working directory
 #' 
-SaveCsvWithTimestamp <- function(export.data, filename, base.dir = getwd()) {
+Save.Csv.With.Timestamp <- function(export.data, filename, base.dir = getwd()) {
   
   # Format the current date as YYYYMMDD
   formatted.date <- format(Sys.Date(), "%Y%m%d")
