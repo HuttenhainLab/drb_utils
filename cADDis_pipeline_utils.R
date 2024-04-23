@@ -170,7 +170,7 @@ Extract.cADDis.Background.Signal <- function(input.data.table, no.cADDis.conditi
 #'  @returns A background-corrected data table
 Background.Correct.Data.Table <- function(input.data.table, cADDis.correction, conduct.correction = TRUE) {
   
-  if (!is.null(cADDis.correction) && conduct.correction = TRUE) {
+  if (!is.null(cADDis.correction) && conduct.correction == TRUE) {
     
     intermediate.data.table <- input.data.table
     
@@ -181,7 +181,7 @@ Background.Correct.Data.Table <- function(input.data.table, cADDis.correction, c
     return.data <- intermediate.data.table[, c("Well", "Drug", "[Conc]", "Fluoro", "Replicate", "Measurement.Time", "Raw.Reading", "Reading.Mean", "Corrected.Reading")]
     return(return.data)
     
-  } else if (conduct.correction = FALSE) {
+  } else if (conduct.correction == FALSE) {
     
     intermediate.data.table <- input.data.table
     
