@@ -165,18 +165,37 @@ Extract.cADDis.Background.Signal <- function(input.data.table, no.cADDis.conditi
 
 #'  Corrects raw assay reads using mean read values from no-cADDis samples
 #'  @param input.data.table `baseline` or `treatment` data tables to correct. 
-#'  @param cADDis.correction 
+#'  @param cADDis.correction Respective no-cADDis background for either baseline or treatment tables
+#'  @param conduct.correction TRUE: Subtract no-cADDis background from `input.data.table`. FALSE: Keep `input.data.table` as-is
 #'  @returns A background-corrected data table
-Background.Correct.Data.Table <- function(input.data.table, cADDis.correction) {
+Background.Correct.Data.Table <- function(input.data.table, cADDis.correction, conduct.correction = TRUE) {
   
-  intermediate.data.table <- input.data.table
+  if (!is.null(cADDis.correction) && conduct.correction = TRUE) {
+    
+    intermediate.data.table <- input.data.table
+    
+    intermediate.data.table <- merge(input.data.table, cADDis.correction, by = "Measurement.Time")
+    
+    intermediate.data.table$Corrected.Reading <- intermediate.data.table$Raw.Reading - intermediate.data.table$Reading.Mean
+    
+    return.data <- intermediate.data.table[, c("Well", "Drug", "[Conc]", "Fluoro", "Replicate", "Measurement.Time", "Raw.Reading", "Reading.Mean", "Corrected.Reading")]
+    return(return.data)
+    
+  } else if (conduct.correction = FALSE) {
+    
+    intermediate.data.table <- input.data.table
+    
+    intermediate.data.table <- merge(input.data.table, cADDis.correction, by = "Measurement.Time")
+    
+    intermediate.data.table$Corrected.Reading <- intermediate.data.table$Raw.Reading
+    
+    return.data <- intermediate.data.table[, c("Well", "Drug", "[Conc]", "Fluoro", "Replicate", "Measurement.Time", "Raw.Reading", "Reading.Mean", "Corrected.Reading")]
+    return(return.data)
+    
+  } else {
+    stop("Error: cADDis.correction cannot be NULL when conduct.correction = TRUE. Make sure cADDis.correction has been defined, or set conduct.correction = FALSE")
+  }
   
-  intermediate.data.table <- merge(input.data.table, cADDis.correction, by = "Measurement.Time")
-  
-  intermediate.data.table$Corrected.Reading <- intermediate.data.table$Raw.Reading - intermediate.data.table$Reading.Mean
-  
-  return.data <- intermediate.data.table[, c("Well", "Drug", "[Conc]", "Fluoro", "Replicate", "Measurement.Time", "Raw.Reading", "Reading.Mean", "Corrected.Reading")]
-  return(return.data)
 }
 
 #'  Calculates ΔF/Fₒ ratio per well from the corrected baseline and treatment data
