@@ -41,7 +41,7 @@ Reformat.Metadata.Add.Replicates <- function(input.data.table, force = FALSE) {
   }
   
   return.table <- input.data.table %>%
-    group_by(Drug, `[Conc]`) %>%
+    group_by(Stimulant,	Agonist,	`Agonist Conc`,	Fluoro) %>%
     mutate(Replicate = row_number())
   
   return(return.table)
