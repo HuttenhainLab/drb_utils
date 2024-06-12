@@ -51,7 +51,8 @@ Reformat.Metadata.Determine.Experimental.Groups <- function(input.data.table, us
     # Convert Agonist Conc to molar concentration for each row
     # Keep original value for sorting purposes
     input.data.table$`Agonist Conc String` <- sapply(input.data.table$`Agonist Conc`, Reformat.Metadata.Convert.Agonist.To.Molar)
-    #input.data.table$`Agonist Conc` <- sapply(input.data.table$`Agonist Conc`, Reformat.Metadata.Convert.Agonist.To.Molar)
+    # force string representations of "NA" to NA
+    input.data.table$`Agonist Conc` <- sapply(input.data.table$`Agonist Conc`, Reformat.Metadata.Convert.Agonist.NA.To.Float)
     
     return.table <- input.data.table %>%
       mutate(Group = paste(Condition, Agonist, `Agonist Conc String`, sep = "."))
@@ -107,6 +108,32 @@ Reformat.Metadata.Convert.Agonist.To.Molar <- function(agonist.concentration.str
     }
     
     return(molar_concentration)
+  }
+}
+
+#'  Converts an agonist concentration string value to a float value instead
+#'  input: "0.000001"
+#'  output: 1E-6
+#'  input: "NA"
+#'  output: NA
+Reformat.Metadata.Convert.Agonist.NA.To.Float <- function(agonist.concentration.string) {
+  # If agonist conc is white space or empty
+  if (trimws(agonist.concentration.string)=="") {
+    return(NA)
+  } 
+  # checks if character string is the literal string "NA"
+  else if (agonist.concentration.string == "NA") {
+    return(NA)
+    # checks if character string is NA
+  } else if (is.na(agonist.concentration.string)) {
+    return(NA)
+    # checks if character string can be converted to a number
+  } else if (is.na(as.numeric(agonist.concentration.string))) {
+    stop(paste0("Error: Value in Agonist Conc column `", agonist.concentration.string, "` cannot be parsed to an molar value.\n\nCheck that this is a numeric string and try again."))
+  } else {
+    
+    # Extracting numeric value from the string
+    return(as.numeric(agonist.concentration.string))
   }
 }
 
