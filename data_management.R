@@ -103,8 +103,21 @@ Make.LFQ.Contrast.Matrix <- function(input.data.frame, condition.vector, exact.m
 #' @param input.data.frame The MsStats dataframe to check. Should be in the same shape as the data process function output.
 #' @param condition.vector A character vector containing the condition-condition comparisons in the format "Condition1-Condition2"
 #' @param exact.match Determines if regular expressions or literal direct matches should be used for contrasts
+Check.MsStats.DataProcess.Output <- function(input.data.frame, data.type){
+  if (!is.list(input.data.frame)) stop("Input data should be a list.")
+  if (!data.type %in% names(input.data.frame)) stop("Specified data type is missing in input data.")
+  
+  if (data.type == "PTM") {
+    if (!("FeatureLevelData" %in% names(input.data.frame$PTM)) || 
+        !("ProteinLevelData" %in% names(input.data.frame$PTM))) {
+      stop("Error: Input dataframe's PTM list does not include necessary items.")
+    }
+  }
+  # Additional checks for other data types can be added here
+}
+
+
 Make.PTM.Contrast.Matrix <- function(input.data.frame, condition.vector, exact.match = TRUE){
-  Check.MsStats.DataProcess.Output(input.data.frame, "PTM")
   columnNames <- as.character(levels(input.data.frame$PTM$ProteinLevelData$GROUP))
   
   positives = c()
