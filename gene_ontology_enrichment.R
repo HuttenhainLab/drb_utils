@@ -1,43 +1,47 @@
 #' @prerequisite clusterProfiler package
 
-#'  Imports current Gene Ontology mappings from BioConductor.
+#' Imports current Gene Ontology mappings from BioConductor.
 #' @param database.name (optional) GO term source. Default "org.Hs.eg.db".
 #' @param ontology.type (optional) Default ontology type. Default "BP".
-#' @param key.type (optional) Primary key type. Default is "Uniprot".
-#' 
+#' @param key.type (optional) Primary key type. Default is "UNIPROT".
+#'
 Load.GO.Terms.From.Bioconductor <- function(database.name = "org.Hs.eg.db",
-                                            ontology.type = "BP",
-                                            key.type = "UNIPROT") {
+                                             ontology.type = "BP",
+                                             key.type = "UNIPROT") {
 
-    message("Using package ", database.name,
-            " version ", packageVersion(database.name))
+  requireNamespace(database.name, quietly = TRUE)
+  requireNamespace("GO.db", quietly = TRUE)
 
-    db <- get(database.name)
+  message("Using package ", database.name, " version ", packageVersion(database.name))
 
-    gmt <- AnnotationDbi::select(
-        db,
-        keys = AnnotationDbi::keys(db, keytype = key.type),
-        columns = c("GO", "TERM", "ONTOLOGY"),
-        keytype = key.type
+  db <- get(database.name, envir = asNamespace(database.name))
+
+  # Pull GO annotations (across all evidence codes/ontologies) for every key
+  all.keys <- AnnotationDbi::keys(db, keytype = key.type)
+
+  goAnno <- suppressMessages(
+    AnnotationDbi::select(
+      db,
+      keys    = all.keys,
+      keytype = key.type,
+      columns = c("GOALL", "ONTOLOGYALL")
     )
+  )
 
-    gmt <- data.table::as.data.table(gmt)
+  # Keep rows matching the requested ontology, drop NAs/duplicates
+  goAnno <- goAnno[!is.na(goAnno$GOALL) & goAnno$ONTOLOGYALL == ontology.type, ]
+  goAnno <- unique(goAnno[, c(key.type, "GOALL")])
 
-    gmt <- gmt[
-        ONTOLOGY == ontology.type &
-        !is.na(GO)
-    ]
+  gmt <- data.table::as.data.table(goAnno)
+  data.table::setnames(gmt, c(key.type, "GOALL"), c("gene", "ont.id"))
 
-    data.table::setnames(gmt,
-                         c(key.type, "TERM", "GO"),
-                         c("gene", "ont", "ont.id"))
+  # Map GO ID -> GO term name via GO.db
+  go.terms <- AnnotationDbi::Term(GO.db::GOTERM)
+  gmt$ont <- go.terms[gmt$ont.id]
 
-    data.table::setcolorder(gmt,
-                            c("ont", "gene", "ont.id"))
-
-    unique(gmt)
+  data.table::setcolorder(gmt, c("ont", "gene", "ont.id"))
+  return(gmt)
 }
-
 #'  Counts the # of terminal branches downstream of a specific
 #'  point in a ComplexHeatmap dendrogram.
 #' @param dendrogram.branch Starting point to begin counting
