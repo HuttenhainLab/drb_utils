@@ -5,17 +5,37 @@
 #' @param ontology.type (optional) Default ontology type. Default "BP".
 #' @param key.type (optional) Primary key type. Default is "Uniprot".
 #' 
-Load.GO.Terms.From.Bioconductor <- function (database.name = "org.Hs.eg.db", ontology.type = "BP", key.type = "UNIPROT"){ 
-  
-  message ("Using package ", database.name, " version ", packageVersion(database.name))
-  
-  GO <- clusterProfiler:::get_GO_data(database.name, ontology.type, key.type)
+Load.GO.Terms.From.Bioconductor <- function(database.name = "org.Hs.eg.db",
+                                            ontology.type = "BP",
+                                            key.type = "UNIPROT") {
 
-  gmt <- rbindlist(lapply (GO$EXTID2PATHID, function(x) data.table(ont.id = x)), idcol="gene")
-  gmt$ont <- GO$PATHID2NAME[gmt$ont.id]
-  setcolorder(gmt, c("ont", "gene", "ont.id"))
+    message("Using package ", database.name,
+            " version ", packageVersion(database.name))
 
-  return(gmt)
+    db <- get(database.name)
+
+    gmt <- AnnotationDbi::select(
+        db,
+        keys = AnnotationDbi::keys(db, keytype = key.type),
+        columns = c("GO", "TERM", "ONTOLOGY"),
+        keytype = key.type
+    )
+
+    gmt <- data.table::as.data.table(gmt)
+
+    gmt <- gmt[
+        ONTOLOGY == ontology.type &
+        !is.na(GO)
+    ]
+
+    data.table::setnames(gmt,
+                         c(key.type, "TERM", "GO"),
+                         c("gene", "ont", "ont.id"))
+
+    data.table::setcolorder(gmt,
+                            c("ont", "gene", "ont.id"))
+
+    unique(gmt)
 }
 
 #'  Counts the # of terminal branches downstream of a specific
